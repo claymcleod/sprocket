@@ -1,0 +1,17 @@
+RootNode@0..72
+  VersionStatementNode@0..11
+    VersionKeyword@0..7 "version"
+    Whitespace@7..8 " "
+    Version@8..11 "1.2"
+  Whitespace@11..13 "\n\n"
+  ImportStatementNode@13..72
+    ImportKeyword@13..19 "import"
+    Whitespace@19..20 " "
+    Ident@20..26 "fq2bam"
+    Whitespace@26..27 " "
+    FromKeyword@27..31 "from"
+    Whitespace@31..32 " "
+    LiteralStringNode@32..72
+      DoubleQuote@32..33 "\""
+      LiteralStringText@33..71 "@stjude-biohackathon/ ..."
+      DoubleQuote@71..72 "\""

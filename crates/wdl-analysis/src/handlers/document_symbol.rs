@@ -85,16 +85,17 @@ fn import_to_symbol(
     import: &ImportStatement,
     lines: &std::sync::Arc<line_index::LineIndex>,
 ) -> Result<DocumentSymbol> {
+    let (original_uri, _) = import.uri();
     let (name, selection_span) = import.namespace().unwrap_or_else(|| {
         (
-            import.uri().text().unwrap().text().to_string(),
-            import.uri().span(),
+            original_uri.text().unwrap().text().to_string(),
+            original_uri.span(),
         )
     });
 
     Ok(DocumentSymbol {
         name,
-        detail: Some(import.uri().text().unwrap().text().to_string()),
+        detail: Some(original_uri.text().unwrap().text().to_string()),
         kind: SymbolKind::NAMESPACE,
         range: common::location_from_span(uri, import.span(), lines)?.range,
         selection_range: common::location_from_span(uri, selection_span, lines)?.range,

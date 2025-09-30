@@ -82,6 +82,7 @@ define_token!(Equal, "the `=` symbol", "=");
 define_token!(Exclamation, "the `!` symbol", "!");
 define_token!(Exponentiation, "the `**` symbol", "**");
 define_token!(FalseKeyword, "the `false` keyword", "false");
+define_token!(FromKeyword, "the `from` keyword", "from");
 define_token!(FileTypeKeyword, "the `File` type keyword", "File");
 define_token!(FloatTypeKeyword, "the `Float` type keyword", "Float");
 define_token!(Greater, "the `>` symbol", ">");

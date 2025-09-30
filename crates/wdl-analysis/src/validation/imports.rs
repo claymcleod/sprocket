@@ -48,13 +48,13 @@ impl Visitor for ImportsVisitor {
             return;
         }
 
-        let uri = stmt.uri();
+        let (uri, translated_uri) = stmt.uri();
         if uri.is_empty() {
             diagnostics.add(empty_import(uri.span()));
             return;
         }
 
-        if uri.text().is_none() {
+        if translated_uri.is_none() {
             let span = uri
                 .parts()
                 .find_map(|p| match p {

@@ -1,0 +1,2 @@
+[dependencies]
+bwa = "stjudecloud/workflows/tools/bwa"

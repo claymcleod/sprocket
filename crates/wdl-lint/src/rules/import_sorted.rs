@@ -106,11 +106,13 @@ impl Visitor for ImportSortedRule {
             let a_uri = ImportStatement::cast(a.clone())
                 .expect("import statement")
                 .uri()
+                .0
                 .text()
                 .expect("import uri");
             let b_uri = ImportStatement::cast(b.clone())
                 .expect("import statement")
                 .uri()
+                .0
                 .text()
                 .expect("import uri");
             a_uri.text().cmp(b_uri.text())

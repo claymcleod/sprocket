@@ -19,6 +19,7 @@ use crate::Span;
 use crate::SyntaxKind;
 use crate::SyntaxNode;
 use crate::TreeNode;
+use crate::v1::FromKeyword;
 
 /// Represents an import statement.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -26,13 +27,43 @@ pub struct ImportStatement<N: TreeNode = SyntaxNode>(N);
 
 impl<N: TreeNode> ImportStatement<N> {
     /// Gets the URI of the import statement.
-    pub fn uri(&self) -> LiteralString<N> {
-        self.child().expect("import should have a URI")
+    pub fn uri(&self) -> (LiteralString<N>, Option<String>) {
+        let node = self
+            .child::<LiteralString<N>>()
+            .expect("import should have a URI");
+
+        /// The prefix for GitHub flavored URLs.
+        const GITHUB_PREFIX: char = '@';
+        let translated = node.text().map(|text| {
+            let text = text.text().to_string();
+            if let Some(text) = text.strip_prefix(GITHUB_PREFIX) {
+                let mut parts = text.splitn(3, "/");
+                let organization = parts.next().unwrap();
+                let repository = parts.next().unwrap();
+                let ident = self.ident().expect("ident must be available for GitHub");
+                let path = format!("{path}{symbol}.wdl", path = parts.next().map(|text| format!("{text}/")).unwrap_or(String::from("/")), symbol = ident.text());
+                format!("https://raw.githubusercontent.com/{organization}/{repository}/refs/heads/main/{path}")
+            } else {
+                text
+            }
+        });
+
+        (node, translated)
+    }
+
+    /// Gets the ident to import, if it exists.
+    pub fn ident(&self) -> Option<Ident<N::Token>> {
+        self.token()
     }
 
     /// Gets the `import` keyword of the import statement.
-    pub fn keyword(&self) -> ImportKeyword<N::Token> {
+    pub fn import_keyword(&self) -> ImportKeyword<N::Token> {
         self.token().expect("import should have a keyword")
+    }
+
+    /// Gets the `from` keyword of the import statement, if it exists.
+    pub fn from_keyword(&self) -> Option<FromKeyword<N::Token>> {
+        self.token()
     }
 
     /// Gets the explicit namespace of the import statement (i.e. the `as`
@@ -63,9 +94,9 @@ impl<N: TreeNode> ImportStatement<N> {
         }
 
         // Get just the file stem of the URI
-        let uri = self.uri();
-        let text = uri.text()?;
-        let stem = match Url::parse(text.text()) {
+        let (uri, translated_uri) = self.uri();
+        let text = translated_uri?;
+        let stem = match Url::parse(&text) {
             Ok(url) => Path::new(
                 urlencoding::decode(url.path_segments()?.next_back()?)
                     .ok()?
@@ -74,7 +105,7 @@ impl<N: TreeNode> ImportStatement<N> {
             .file_stem()
             .and_then(OsStr::to_str)?
             .to_string(),
-            Err(_) => Path::new(text.text())
+            Err(_) => Path::new(&text)
                 .file_stem()
                 .and_then(OsStr::to_str)?
                 .to_string(),
@@ -192,7 +223,7 @@ import "qux.wdl" as x alias A as B alias C as D
                 assert_eq!(imports.len(), 4);
 
                 // First import statement
-                assert_eq!(imports[0].uri().text().unwrap().text(), "foo.wdl");
+                assert_eq!(imports[0].uri().0.text().unwrap().text(), "foo.wdl");
                 assert!(imports[0].explicit_namespace().is_none());
                 assert_eq!(
                     imports[0].namespace().map(|(n, _)| n).as_deref(),
@@ -201,13 +232,13 @@ import "qux.wdl" as x alias A as B alias C as D
                 assert_eq!(imports[0].aliases().count(), 0);
 
                 // Second import statement
-                assert_eq!(imports[1].uri().text().unwrap().text(), "bar.wdl");
+                assert_eq!(imports[1].uri().0.text().unwrap().text(), "bar.wdl");
                 assert_eq!(imports[1].explicit_namespace().unwrap().text(), "x");
                 assert_eq!(imports[1].namespace().map(|(n, _)| n).as_deref(), Some("x"));
                 assert_eq!(imports[1].aliases().count(), 0);
 
                 // Third import statement
-                assert_eq!(imports[2].uri().text().unwrap().text(), "baz.wdl");
+                assert_eq!(imports[2].uri().0.text().unwrap().text(), "baz.wdl");
                 assert!(imports[2].explicit_namespace().is_none());
                 assert_eq!(
                     imports[2].namespace().map(|(n, _)| n).as_deref(),
@@ -216,7 +247,7 @@ import "qux.wdl" as x alias A as B alias C as D
                 assert_aliases(imports[2].aliases());
 
                 // Fourth import statement
-                assert_eq!(imports[3].uri().text().unwrap().text(), "qux.wdl");
+                assert_eq!(imports[3].uri().0.text().unwrap().text(), "qux.wdl");
                 assert_eq!(imports[3].explicit_namespace().unwrap().text(), "x");
                 assert_eq!(imports[3].namespace().map(|(n, _)| n).as_deref(), Some("x"));
                 assert_aliases(imports[3].aliases());

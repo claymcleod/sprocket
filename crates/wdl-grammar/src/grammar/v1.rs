@@ -113,6 +113,9 @@ const LITERAL_INPUT_ITEM_RECOVERY_SET: TokenSet =
 const LITERAL_OUTPUT_ITEM_RECOVERY_SET: TokenSet =
     ANY_IDENT.union(TokenSet::new(&[Token::CloseBrace as u8]));
 
+/// The expected names of items in an import definition.
+const IMPORT_ITEM_EXPECTED_NAMES: &[&str] = &["string", "identifier"];
+
 /// The expected names of items in a struct definition.
 const STRUCT_ITEM_EXPECTED_NAMES: &[&str] = &[
     "metadata section",
@@ -471,6 +474,50 @@ fn item(parser: &mut Parser<'_>, marker: Marker) -> Result<(), (Marker, Diagnost
 /// Parses an import statement.
 fn import_statement(parser: &mut Parser<'_>, marker: Marker) -> Result<(), (Marker, Diagnostic)> {
     parser.require(Token::ImportKeyword);
+
+    match parser.peek() {
+        Some((Token::Ident, _)) => import_statement_ident(parser, marker),
+        Some((Token::SingleQuote, _))
+        | Some((Token::DoubleQuote, _))
+        | Some((Token::OpenHeredoc, _)) => import_statement_string(parser, marker),
+        found => {
+            let (found, span) = found
+                .map(|(t, s)| (Some(t.describe()), s))
+                .unwrap_or_else(|| (None, parser.span()));
+            Err((
+                marker,
+                expected_one_of(IMPORT_ITEM_EXPECTED_NAMES, found, span),
+            ))
+        }
+    }
+}
+
+/// Parses an import statement with an ident.
+fn import_statement_ident(
+    parser: &mut Parser<'_>,
+    marker: Marker,
+) -> Result<(), (Marker, Diagnostic)> {
+    expected!(parser, marker, Token::Ident);
+    expected!(parser, marker, Token::FromKeyword);
+    expected_fn!(parser, marker, string);
+
+    if parser.next_if(Token::AsKeyword) {
+        expected!(parser, marker, Token::Ident, "import namespace");
+    }
+
+    while let Some((Token::AliasKeyword, _)) = parser.peek() {
+        expected_fn!(parser, marker, import_alias);
+    }
+
+    marker.complete(parser, SyntaxKind::ImportStatementNode);
+    Ok(())
+}
+
+/// Parses an import statement with a string.
+fn import_statement_string(
+    parser: &mut Parser<'_>,
+    marker: Marker,
+) -> Result<(), (Marker, Diagnostic)> {
     expected_fn!(parser, marker, string);
 
     if parser.next_if(Token::AsKeyword) {

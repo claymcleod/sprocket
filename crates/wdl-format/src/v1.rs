@@ -56,8 +56,8 @@ pub fn format_ast(element: &FormatElement, stream: &mut TokenStream<PreToken>) {
             .expect("import statement node")
             .as_import_statement()
             .expect("import statement");
-        let a_uri = a.uri().text().expect("import uri");
-        let b_uri = b.uri().text().expect("import uri");
+        let a_uri = a.uri().0.text().expect("import uri");
+        let b_uri = b.uri().0.text().expect("import uri");
         a_uri.text().cmp(b_uri.text())
     });
 

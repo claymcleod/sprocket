@@ -267,7 +267,7 @@ fn add_namespace(
     };
 
     // Check for conflicting namespaces
-    let span = import.uri().span();
+    let span = import.uri().0.span();
     let ns = match import.namespace() {
         Some((ns, span)) => match document.namespaces.get(&ns) {
             Some(prev) => {
@@ -1345,9 +1345,9 @@ fn resolve_import(
     stmt: &ImportStatement,
     importer_index: NodeIndex,
 ) -> Result<(Arc<Url>, Document), Option<Diagnostic>> {
-    let uri = stmt.uri();
+    let (uri, translated_uri) = stmt.uri();
     let span = uri.span();
-    let text = match uri.text() {
+    let text = match translated_uri {
         Some(text) => text,
         None => {
             // The import URI isn't valid; this is caught at validation time, so we do not
@@ -1357,7 +1357,7 @@ fn resolve_import(
     };
 
     let importer_node = graph.get(importer_index);
-    let uri = match importer_node.uri().join(text.text()) {
+    let uri = match importer_node.uri().join(&text) {
         Ok(uri) => uri,
         Err(e) => return Err(Some(invalid_relative_import(&e, span))),
     };
@@ -1372,12 +1372,12 @@ fn resolve_import(
 
     // Check for a failure to load the import
     if let ParseState::Error(e) = imported_node.parse_state() {
-        return Err(Some(import_failure(text.text(), e, span)));
+        return Err(Some(import_failure(&text, e, span)));
     }
 
     // Check for analysis error
     if let Some(e) = imported_node.analysis_error() {
-        return Err(Some(import_failure(text.text(), e, span)));
+        return Err(Some(import_failure(&text, e, span)));
     }
 
     // Ensure the import has a matching WDL version

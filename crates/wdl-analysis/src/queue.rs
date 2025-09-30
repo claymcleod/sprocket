@@ -35,7 +35,6 @@ use tracing::error;
 use tracing::info;
 use url::Url;
 use wdl_ast::Ast;
-use wdl_ast::AstToken;
 use wdl_ast::Node;
 use wdl_ast::Severity;
 use wdl_format::Formatter;
@@ -1008,12 +1007,13 @@ where
                 None | Some(Ast::Unsupported) => {}
                 Some(Ast::V1(ast)) => {
                     for import in ast.imports() {
-                        let text = match import.uri().text() {
+                        let (_, translated_uri) = import.uri();
+                        let text = match translated_uri {
                             Some(text) => text,
                             None => continue,
                         };
 
-                        let import_uri = match graph.get(index).uri().join(text.text()) {
+                        let import_uri = match graph.get(index).uri().join(&text) {
                             Ok(uri) => uri,
                             Err(_) => continue,
                         };

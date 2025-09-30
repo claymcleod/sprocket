@@ -88,6 +88,8 @@ pub enum SyntaxKind {
     EnvKeyword,
     /// The `false` keyword token.
     FalseKeyword,
+    /// The `from` keyword token.
+    FromKeyword,
     /// The `if` keyword token.
     IfKeyword,
     /// The `in` keyword token.
@@ -423,6 +425,7 @@ impl SyntaxKind {
             Self::ElseKeyword => "`else` keyword",
             Self::EnvKeyword => "`env` keyword",
             Self::FalseKeyword => "`false` keyword",
+            Self::FromKeyword => "`from` keyword",
             Self::IfKeyword => "`if` keyword",
             Self::InKeyword => "`in` keyword",
             Self::ImportKeyword => "`import` keyword",
