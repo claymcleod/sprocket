@@ -1,0 +1,50 @@
+[package]
+name = "sprocket-server"
+version = "0.1.0"
+description = "REST API server for executing WDL workflows"
+rust-version.workspace = true
+license.workspace = true
+edition.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository = "https://github.com/stjude-rust-labs/sprocket/tree/main/crates/sprocket-server"
+documentation = "https://docs.rs/sprocket-server"
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+chrono.workspace = true
+clap.workspace = true
+clap-verbosity-flag = { version = "3.0.2", features = ["tracing"] }
+figment.workspace = true
+futures.workspace = true
+petname.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sqlx.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tokio-util.workspace = true
+toml.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+url.workspace = true
+utoipa = { workspace = true, features = ["chrono"] }
+utoipa-swagger-ui = { workspace = true, features = ["axum"] }
+uuid.workspace = true
+wdl-analysis = { version = "0.14.0", path = "../wdl-analysis" }
+wdl-engine = { version = "0.9.0", path = "../wdl-engine", features = ["codespan-reporting"] }
+wdl-grammar = { version = "0.18.0", path = "../wdl-grammar" }
+
+[dev-dependencies]
+http-body-util.workspace = true
+pretty_assertions.workspace = true
+tempfile.workspace = true
+tower.workspace = true
+tracing-subscriber.workspace = true
+
+[lints]
+workspace = true
